@@ -22,6 +22,8 @@ initializePassport(
 
 const users = []
 
+const Article = require('./models/articles.ejs');
+
 app.use(express.urlencoded({extended: false}))
 app.use(flash())
 app.use(session({
@@ -80,7 +82,29 @@ app.post("/api/signup", checkNotAuthenticated, async (req, res) => {
   }
 })
 
+app.post('/api/users/:userId/articles', authenticateToken, async (req, res) => {
+  try {
+    // Get the user ID from the request parameters
+    const userId = req.params.userId;
 
+    // Retrieve the article details from the request body
+    const { title, content } = req.body;
+
+    // Create a new article object
+    const article = new Article({
+      title,
+      content,
+      userId
+    });
+
+    // Save the article to the database
+    await article.save();
+
+    res.status(201).json({ message: 'Article created successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 // Routes
 app.get('/', checkAuthenticated, (req, res) => {
@@ -95,6 +119,16 @@ app.get('/api/signup', checkNotAuthenticated, (req, res) => {
   res.render("register.ejs")
 })
 
+app.get('/api/articles', authenticateToken, async (req, res) => {
+  try {
+    // Fetch all articles from the database
+    const articles = await Article.find();
+
+    res.json(articles);
+  } catch (err) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 app.delete("/logout", (req, res) => {
   req.logout(req.user, err => {
@@ -103,7 +137,29 @@ app.delete("/logout", (req, res) => {
   })
 })
 
+app.put('/api/users/:userId', authenticateToken, async (req, res) => {
+  try {
+    // Get the user ID from the request parameters
+    const userId = req.params.userId;
 
+    // Retrieve the user details from the request body
+    const { name, age } = req.body;
+
+    // Find the user in the database by ID
+    const user = await User.findById(userId);
+
+    // Update the user's name and age
+    user.name = name;
+    user.age = age;
+
+    // Save the updated user to the database
+    await user.save();
+
+    res.json({ message: 'User profile updated successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 function checkAuthenticated(req, res, next){
   if(req.isAuthenticated()){
