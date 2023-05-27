@@ -1,0 +1,9 @@
+<!-- profile.ejs -->
+
+<!-- Form for updating user profile -->
+<form action="/api/users/<%= userId %>" method="POST">
+    <input type="text" name="name" placeholder="Name" value="<%= user.name %>" required>
+    <input type="number" name="age" placeholder="Age" value="<%= user.age %>" required>
+    <button type="submit">Update Profile</button>
+  </form>
+  
